@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <style>
+        /* Existing styles ... */
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        /* ... Other styles ... */
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="{{ url_for('static', filename='saintlogo.png') }}" alt="Company Logo">
+    </div>
+    
+    <div class="container">
+        <h1>Bus RFID Admin</h1>
+        <a href="/download">Download Excel File</a>
+
+        <!-- New section for live RFID scans -->
+        <h2>Live RFID Scans:</h2>
+        <table id="live-data-table">
+            <tr>
+                <th>Date</th>
+                <th>Day</th>
+                <th>Time</th>
+                <th>Bus Number</th>
+                <th>Status</th>
+            </tr>
+            <!-- Data rows will be inserted here by JavaScript -->
+        </table>
+        
+        <h2>Current RFID Tags:</h2>
+        <ul>
+            {% for uid, name in rfid_tags.items() %}
+                <li>{{ name }}: {{ uid }}</li>
+            {% endfor %}
+        </ul>
+        <form action="/add-uid" method="post">
+            <input type="text" name="uid" placeholder="Enter New UID">
+            <input type="text" name="name" placeholder="Enter Bus Name">
+            <input type="submit" value="Add UID">
+        </form>
+    </div>
+    <script>
+        function updateLiveData() {
+            fetch('/get-data')
+            .then(response => response.json())
+            .then(data => {
+                const table = document.getElementById('live-data-table');
+                // Clear previous data rows, but keep the header
+                table.innerHTML = table.rows[0].outerHTML;
+                
+                // Add new rows for each entry
+                data.forEach(entry => {
+                    const row = table.insertRow(-1); // Insert a row at the end of the table
+                    row.insertCell(0).textContent = entry.Date;
+                    row.insertCell(1).textContent = entry.Day;
+                    row.insertCell(2).textContent = entry.Time;
+                    row.insertCell(3).textContent = entry.Busnumber;
+                    row.insertCell(4).textContent = entry.Status;
+                });
+            })
+            .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Update data every 5 seconds
+        setInterval(updateLiveData, 5000);
+
+        // Update data immediately on page load
+        updateLiveData();
+    </script>
+</body>
+</html>
+
